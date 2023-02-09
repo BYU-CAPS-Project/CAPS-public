@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+import os.path
+
+data_path = ['..', 'data']
 
 
 def MAE(model, patientID, X, y, n_splits=5):
@@ -14,7 +17,7 @@ def MAE(model, patientID, X, y, n_splits=5):
     Example 1
     >>>data = pd.read_csv("master_frame5.csv").dropna()
     >>>X = np.ones(data.shape[0]).reshape(-1, 1)
-    >>>print(EvaluateRegression(LinearRegression(), X = X, y = data['RawScore']))
+    >>>print(MAE(LinearRegression(), patientID=patientID, X=X, y=data['RawScore']))
     ...0.03428465274515196
     '''
     from sklearn.model_selection import KFold
@@ -41,44 +44,6 @@ def MAE(model, patientID, X, y, n_splits=5):
     return np.mean(mae)
 
 
-def GetXy(X_columns=None, y_column=None, filter=None, dropna=True, csv_file='master_frame5.csv'):
-    '''
-    X_columns: used tp specify the columns returned in X, otherwise those
-        marked as X_column in Columns.csv are returned.
-    y_column: used to specify the outcome column. If nothing is passed, returns
-        all columns marked as y_column in Columns.csv.
-    filter: used to filter data before returning X and y. Pass a dictionary
-        where the key is the column and the value is a string of the
-        condition whereby the column will be filtered.
-    dropna: drops rows that have NAs in master_frame5.csv. These would be
-        sessions that have fewer than two OQ scores
-
-    Examples:
-    X, y = GetXy(dropna=False)
-    X, y = GetXY(y_column='NetDrop')
-    X, y = GetXy(filter={'NumberOfOQs': ' >= 5',
-                         'IncomingSubClinical': ' != 1'})
-    '''
-
-    data = pd.read_csv(csv_file)
-    columns = pd.read_csv('DataDictionary.csv')
-    if filter is not None:
-        for key in filter.keys():
-            mask = eval('data["{}"]{}'.format(key, filter[key]))
-            data = data.loc[mask, :]
-    if dropna:
-        data = data.dropna()
-    if X_columns is None:
-        X_columns = columns.loc[columns['Type'] == 'X_column', 'Name'].values
-    X = data[X_columns]
-    if 'TherapistID' in X_columns:
-        X = pd.get_dummies(X, columns=['TherapistID'], drop_first=False)
-    if y_column is None:
-        y_column = columns.loc[columns['Type'] == 'y_column', 'Name'].values
-    y = data[y_column]
-    return X, y
-
-
 def GetPatientXy(X_columns=None, y_column=None, filter=None, dropna=True, csv_file='master_frame5.csv'):
     '''
     X_columns: used tp specify the columns returned in X, otherwise those
@@ -92,14 +57,14 @@ def GetPatientXy(X_columns=None, y_column=None, filter=None, dropna=True, csv_fi
         sessions that have fewer than two OQ scores
 
     Examples:
-    X, y = GetXy(dropna=False)
-    X, y = GetXY(y_column='NetDrop')
-    X, y = GetXy(filter={'NumberOfOQs': ' >= 5',
+    patientID, X, y = GetPatientXy(dropna=False)
+    patientID, X, y = GetPatientXy(y_column='NetDrop')
+    patientID, X, y = GetPatientXy(filter={'NumberOfOQs': ' >= 5',
                          'IncomingSubClinical': ' != 1'})
     '''
 
-    data = pd.read_csv(csv_file)
-    columns = pd.read_csv('DataDictionary.csv')
+    data = pd.read_csv(os.path.join(*data_path, csv_file))
+    columns = pd.read_csv(os.path.join(*data_path, 'DataDictionary.csv'))
     if filter is not None:
         for key in filter.keys():
             mask = eval('data["{}"]{}'.format(key, filter[key]))
