@@ -62,6 +62,9 @@ def GetPatientXy(X_columns=None, y_column=None, filter=None, dropna=True, csv_fi
     patientID, X, y = GetPatientXy(filter={'NumberOfOQs': ' >= 5',
                          'IncomingSubClinical': ' != 1'})
     '''
+    if os.path.exits(os.path.join(*data_path, csv_file)) == False:
+        print("The csv file does not exist")
+        return None
 
     data = pd.read_csv(os.path.join(*data_path, csv_file))
     columns = pd.read_csv(os.path.join(*data_path, 'DataDictionary.csv'))
@@ -80,6 +83,24 @@ def GetPatientXy(X_columns=None, y_column=None, filter=None, dropna=True, csv_fi
         y_column = columns.loc[columns['Type'] == 'y_column', 'Name'].values
     y = data[y_column]
     return (data['PatientID'], X, y)
+
+
+def GetCurrentModel(pickle_file_name="current_model.pkl"):
+    with open(pickle_file_name, 'rb') as f:
+        model = pickle.load(f)
+    return model
+
+
+def GetFeaturesList(file_name="features.txt"):
+    features_list = []
+    with open(file_name, 'r') as f:
+        for line in f:
+            features_list.append(line.strip())
+
+    #Check to see the features list was read in properly
+    if (len(features_list) == 0):
+        print("Something went wrong in reading the features file")
+    return features_list
 
 
 def ProgressBar(index, total):
