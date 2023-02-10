@@ -1,18 +1,19 @@
 import pandas as pd
 import numpy as np
 import os.path
+import pickle
 
 data_path = ['..', 'data']
 
 
 def MAE(model, patientID, X, y, n_splits=5):
     '''
-    Returns the mean of a number (five by default) mse's for the method.
+    Returns the mean of a number (five by default) mae's for the method.
         model: must have the methods fit(X,y) and predict(X,y) to work
-        data: a pandas data frame. This function will create an X variable and y variable using data,
+        patientID: to stratify train/test splits
         X: endogenous variables or predictors
         y: exogenous variable or outcome
-        n_splits: the number of times to find the mse
+        n_splits: the number of times to find the mae
 
     Example 1
     >>>data = pd.read_csv("master_frame5.csv").dropna()
@@ -42,6 +43,35 @@ def MAE(model, patientID, X, y, n_splits=5):
             mean_absolute_error(y[test_index], model.predict(X[test_index]))
         )
     return np.mean(mae)
+
+
+
+def METRIC(model, metric, patientID, X, y, n_splits=5):
+    '''
+    A generic version of MAE.
+        metric: A function that computes a metric like so, metric(y, y_hat)
+    '''
+    from sklearn.model_selection import KFold
+
+    if len(X.shape) == 1:
+        X = np.array(X).reshape(-1, 1)
+    else:
+        X = np.array(X)
+    y = np.array(y).ravel()
+    
+    patientID.index = range(patientID.shape[0])
+    patient_list = patientID.unique()
+    kf = KFold(n_splits=5, shuffle=True)
+    m = []
+    for train_p, test_p in kf.split(patient_list):
+        train_index = patientID[patientID.isin(patient_list[train_p])].index
+        test_index = patientID[patientID.isin(patient_list[test_p])].index
+        test_index = patientID.isin(patient_list[test_p]).index
+        model.fit(X[train_index], y[train_index])
+        m.append(
+            metric(y[test_index], model.predict(X[test_index]))
+        )
+    return np.mean(m)
 
 
 def GetPatientXy(X_columns=None, y_column=None, filter=None, dropna=True, csv_file='master_frame5.csv'):
