@@ -37,7 +37,6 @@ def MAE(model, patientID, X, y, n_splits=5):
     for train_p, test_p in kf.split(patient_list):
         train_index = patientID[patientID.isin(patient_list[train_p])].index
         test_index = patientID[patientID.isin(patient_list[test_p])].index
-        test_index = patientID.isin(patient_list[test_p]).index
         model.fit(X[train_index], y[train_index])
         mae.append(
             mean_absolute_error(y[test_index], model.predict(X[test_index]))
@@ -92,7 +91,7 @@ def GetPatientXy(X_columns=None, y_column=None, filter=None, dropna=True, csv_fi
     patientID, X, y = GetPatientXy(filter={'NumberOfOQs': ' >= 5',
                          'IncomingSubClinical': ' != 1'})
     '''
-    if os.path.exits(os.path.join(*data_path, csv_file)) == False:
+    if os.path.exists(os.path.join(*data_path, csv_file)) == False:
         print("The csv file does not exist")
         return None
 
@@ -131,6 +130,13 @@ def GetFeaturesList(file_name="features.txt"):
     if (len(features_list) == 0):
         print("Something went wrong in reading the features file")
     return features_list
+
+
+def GetModelPatientXy(input = ("master_frame5.csv", "features.txt", "NetDrop", "current_model.pkl")):
+    model = GetCurrentModel(input[3])
+    features_list = GetFeaturesList(file_name=input[1])
+    patientID, X,y = GetPatientXy(X_columns = features_list, y_column = input[2], dropna = True, csv_file = input[0])
+    return (model, patientID, X, y)
 
 
 def ProgressBar(index, total):
