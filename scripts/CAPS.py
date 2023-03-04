@@ -96,7 +96,7 @@ def GetPatientXy(X_columns=None, y_column=None, filter=None, dropna=True, csv_fi
         return None
 
     data = pd.read_csv(os.path.join(*data_path, csv_file))
-    columns = pd.read_csv(os.path.join(*data_path, 'DataDictionary.csv'))
+    columns = pd.read_csv(os.path.join("..", 'DataDictionary.csv'))
     if filter is not None:
         for key in filter.keys():
             mask = eval('data["{}"]{}'.format(key, filter[key]))
